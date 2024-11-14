@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discussion App</title>
+  <style>
+    /* Enhanced Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      max-width: 1000px;
+      background-color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .left-pane, .right-pane {
+      padding: 30px;
+    }
+
+    .left-pane {
+      width: 40%;
+      background-color: #f1f8ff;
+      border-right: 2px solid #e0e0e0;
+      overflow-y: auto;
+      max-height: 600px;
+    }
+
+    .right-pane {
+      width: 60%;
+      background-color: #ffffff;
+      overflow-y: auto;
+      max-height: 600px;
+    }
+
+    h2, h3 {
+      color: #333;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .question-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    .question-item {
+      padding: 15px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+
+    .question-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .vote-controls {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+
+    .vote-controls button {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    .vote-count {
+      text-align: center;
+      font-size: 1em;
+    }
+
+    .question-form, .response-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    input[type="text"], textarea {
+      padding: 12px;
+      font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+      background-color: #f9f9f9;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: #007BFF;
+      outline: none;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 1em;
+      font-weight: bold;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    .resolve-btn {
+      background-color: #28a745;
+      margin-top: 20px;
+    }
+
+    .resolve-btn:hover {
+      background-color: #218838;
+    }
+
+    .response-section h3 {
+      font-size: 1.2em;
+      color: #444;
+      margin-bottom: 10px;
+      text-align: left;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    .response-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+
+    .response-item {
+      background-color: #f4f8fb;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .response-item strong {
+      color: #333;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Left Pane - Question List and Search -->
+    <div class="left-pane">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+      </div>
+      <h2>Questions</h2>
+      <ul id="questionList" class="question-list">
+        <!-- Question items will be added here dynamically -->
+      </ul>
+    </div>
+
+    <!-- Right Pane - Question Form or Responses -->
+    <div class="right-pane">
+      <div id="questionForm">
+        <h2>Ask a Question</h2>
+        <form class="question-form">
+          <input type="text" id="questionTitle" placeholder="Title" required>
+          <textarea id="questionContent" placeholder="Question" required></textarea>
+          <button type="button" onclick="submitQuestion()">Submit Question</button>
+        </form>
+      </div>
+
+      <div id="questionDetail" style="display: none;">
+        <h2 id="displayQuestionTitle">Question Title</h2>
+        <p id="displayQuestionContent">Question Content</p>
+        <button class="resolve-btn" onclick="resolveQuestion()">Resolve</button>
+
+        <div class="response-section">
+          <h3>Responses</h3>
+          <ul id="responseList" class="response-list">
+            <!-- Response items will be added here dynamically -->
+          </ul>
+
+          <h3>Submit a Response</h3>
+          <form class="response-form">
+            <input type="text" id="responderName" placeholder="Your Name" required>
+            <textarea id="responseContent" placeholder="Your Response" required></textarea>
+            <button type="button" onclick="submitResponse()">Submit Response</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript for the Discussion App functionality
+
+    const questionList = document.getElementById("questionList");
+    const questionForm = document.getElementById("questionForm");
+    const questionDetail = document.getElementById("questionDetail");
+
+    const displayQuestionTitle = document.getElementById("displayQuestionTitle");
+    const displayQuestionContent = document.getElementById("displayQuestionContent");
+    const responseList = document.getElementById("responseList");
+    const searchInput = document.getElementById("searchInput");
+
+    let questions = [];
+    let currentQuestionId = null;
+
+    function submitQuestion() {
+      const title = document.getElementById("questionTitle").value.trim();
+      const content = document.getElementById("questionContent").value.trim();
+      if (title && content) {
+        const newQuestion = {
+          id: Date.now(),
+          title,
+          content,
+          responses: [],
+          votes: 0
+        };
+        questions.push(newQuestion);
+        renderQuestions();
+        document.getElementById("questionTitle").value = "";
+        document.getElementById("questionContent").value = "";
+      }
+    }
+
+    function renderQuestions() {
+      questionList.innerHTML = "";
+      questions.sort((a, b) => b.votes - a.votes); // Sort by votes
+      questions.forEach(question => {
+        const questionItem = document.createElement("li");
+        questionItem.className = "question-item";
+        questionItem.textContent = question.title;
+        questionItem.onclick = () => openQuestion(question.id);
+
+        const voteControls = document.createElement("div");
+        voteControls.className = "vote-controls";
+
+        const upvoteBtn = document.createElement("button");
+        upvoteBtn.textContent = "⬆️";
+        upvoteBtn.onclick = (e) => { e.stopPropagation(); upvoteQuestion(question.id); };
+
+        const downvoteBtn = document.createElement("button");
+        downvoteBtn.textContent = "⬇️";
+        downvoteBtn.onclick = (e) => { e.stopPropagation(); downvoteQuestion(question.id); };
+
+        const voteCount = document.createElement("span");
+        voteCount.className = "vote-count";
+        voteCount.textContent = question.votes;
+
+        voteControls.appendChild(upvoteBtn);
+        voteControls.appendChild(voteCount);
+        voteControls.appendChild(downvoteBtn);
+
+        questionItem.appendChild(voteControls);
+        questionList.appendChild(questionItem);
+      });
+    }
+
+    function openQuestion(id) {
+      currentQuestionId = id;
+      const question = questions.find(q => q.id === id);
+      displayQuestionTitle.textContent = question.title;
+      displayQuestionContent.textContent = question.content;
+      renderResponses(question.responses);
+      questionForm.style.display = "none";
+      questionDetail.style.display = "block";
+    }
+
+    function renderResponses(responses) {
+      responseList.innerHTML = "";
+      responses.sort((a, b) => b.votes - a.votes); // Sort by votes
+      responses.forEach(response => {
+        const responseItem = document.createElement("li");
+        responseItem.className = "response-item";
+        responseItem.innerHTML = `<strong>${response.name}:</strong> ${response.comment}`;
+
+        const voteControls = document.createElement("div");
+        voteControls.className = "vote-controls";
+
+        const upvoteBtn = document.createElement("button");
+        upvoteBtn.textContent = "⬆️";
+        upvoteBtn.onclick = () => upvoteResponse(response.id);
+
+        const downvoteBtn = document.createElement("button");
+        downvoteBtn.textContent = "⬇️";
+        downvoteBtn.onclick = () => downvoteResponse(response.id);
+
+        const voteCount = document.createElement("span");
+        voteCount.className = "vote-count";
+        voteCount.textContent = response.votes;
+
+        voteControls.appendChild(upvoteBtn);
+        voteControls.appendChild(voteCount);
+        voteControls.appendChild(downvoteBtn);
+
+        responseItem.appendChild(voteControls);
+        responseList.appendChild(responseItem);
+      });
+    }
+
+    function submitResponse() {
+      const name = document.getElementById("responderName").value.trim();
+      const comment = document.getElementById("responseContent").value.trim();
+      if (name && comment && currentQuestionId !== null) {
+        const question = questions.find(q => q.id === currentQuestionId);
+        question.responses.push({ id: Date.now(), name, comment, votes: 0 });
+        renderResponses(question.responses);
+        document.getElementById("responderName").value = "";
+        document.getElementById("responseContent").value = "";
+      }
+    }
+
+    function resolveQuestion() {
+      questions = questions.filter(q => q.id !== currentQuestionId);
+      renderQuestions();
+      questionForm.style.display = "block";
+      questionDetail.style.display = "none";
+    }
+
+    function filterQuestions() {
+      const searchTerm = searchInput.value.toLowerCase();
+      if (searchTerm) {
+        questions = questions.filter(q => q.title.toLowerCase().includes(searchTerm));
+      } else {
+        // Reset to full questions list
+        // Assuming you have a way to refresh from original list if stored
+      }
+      renderQuestions();
+    }
+
+    function upvoteQuestion(id) {
+      const question = questions.find(q => q.id === id);
+      question.votes++;
+      renderQuestions();
+    }
+
+    function downvoteQuestion(id) {
+      const question = questions.find(q => q.id === id);
+      question.votes--;
+      renderQuestions();
+    }
+
+    function upvoteResponse(id) {
+      const question = questions.find(q => q.id === currentQuestionId);
+      const response = question.responses.find(r => r.id === id);
+      response.votes++;
+      renderResponses(question.responses);
+    }
+
+    function downvoteResponse(id) {
+      const question = questions.find(q => q.id === currentQuestionId);
+      const response = question.responses.find(r => r.id === id);
+      response.votes--;
+      renderResponses(question.responses);
+    }
+  </script>
+
+</body>
+</html>
